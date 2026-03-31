@@ -18,7 +18,7 @@ def opt_plan(df_MA, df_Plan):
 
     # 3. Nebenbedingung: Jede Schicht muss genau 1 Person haben
     for s in schicht_ids:
-        prob += pulp.lpSum([x[(m, s)] for m in ma_ids]) == 1
+        prob += pulp.lpSum([x[(m, s)] for m in ma_ids]) >= 2
 
     #Constraints
         for m in ma_ids:
@@ -29,6 +29,15 @@ def opt_plan(df_MA, df_Plan):
                 for s in schicht_ids
             ])
             prob += stunden_im_plan <= max_h
+
+        #for m in ma_ids:
+        #    stunden_im_plan = pulp.lpSum([
+        #        x[(m,s)] * df_Plan.loc[df_Plan['schicht_id'] == s, 'Hours'].values(0)
+        #        for s in schicht_ids
+        #    ])
+
+        #    max_h = df_MA.at[m, 'Hours']
+        #    prob += stunden_im_plan == max_h
 
     # 5. Lösen
     prob.solve(pulp.PULP_CBC_CMD(msg=0))
@@ -59,7 +68,7 @@ def opt_plan(df_MA, df_Plan):
                 # Wir holen uns den Namen des MA (falls vorhanden), sonst die ID
                 ma_name = df_MA.at[m, 'Name'] if 'Name' in df_MA.columns else m
                 print(
-                    f"Mitarbeiter: {ma_name:<15} | Limit: {limit:>5}h | Geplant: {geplanned_stunden:>5}h | Rest: {rest:>5}h")
+                    f"Mitarbeiter: {ma_name:<15} | Limit: {limit:>5}h | Geplant: {geplante_stunden:>5}h | Rest: {rest:>5}h")
 
             print("-" * 50)
 
