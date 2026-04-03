@@ -1,41 +1,45 @@
-from Mitarbeiter_config import get_mitarbeiter_df
-from Timetable_confiq import Timetable
-from Opt import opt_plan
+from employee_config import get_employee_df
+from timetable_config import create_timetable
+from opt import optimize_schedule
 
 
 def main():
     print("=" * 30)
-    print("  Erstelle Dienstplan  ")
+    print("  Welcome to Ephemereia - Shift Plan Optimization  ")
     print("=" * 30)
 
-    # 1. ABFRAGEN ÜBER DIE KONSOLE
+    print("What would you like to do?")
+    print("[1] Export (Generate a new template)")
+    print("[2] Import (Load and optimize shift plan)")
+
+    # 1. CONSOLE QUERIES
     try:
-        datei = input("CSV-Datei der Mitarbeiter (Standard: Mitarbeiter.csv): ") or "Mitarbeiter.csv"
+        file_path = input("Employee CSV file (Default: Mitarbeiter.csv): ") or "Mitarbeiter.csv"
 
-        start = input("Start-Datum: ")
-        ende = input("End-Datum: ")
+        start_date = input("Start Date: ")
+        end_date = input("End Date: ")
 
-        output_name = input("Name des Dienstplans: ") or "Dienstplan_Output.csv"
+        output_name = input("Schedule output name: ") or "Schedule_Output.csv"
 
+        # Load employee data
+        df_employees = get_employee_df(file_path)
 
-        df_ma = get_mitarbeiter_df(datei)
+        print(f"Generating shift plan from {start_date} to {end_date}...")
+        df_timetable_lectrue_period = create_timetable(start_date, end_date)
 
-        print(f"Erstelle Schichtplan von {start} bis {ende}...")
-        df_Plan = Timetable(start, ende)
+        print("Starting optimization...")
+        final_schedule = optimize_schedule(df_employees, df_timetable_lectrue_period)
 
-        print("Starte  Optimierung")
-        fertiger_plan = opt_plan(df_ma, df_Plan)
-
-
-        if fertiger_plan is not None:
-            fertiger_plan.to_csv(output_name, sep=';', index=False, encoding='utf-8-sig')
-            print(f"Done! Datei gespeichert als: {output_name}")
+        if final_schedule is not None:
+            final_schedule.to_csv(output_name, sep=';', index=False, encoding='utf-8-sig')
+            print(f"Done! File saved as: {output_name}")
         else:
-            print("\nFehler: Optimierung fehlgeschlagen.")
+            print("\nError: Optimization failed.")
 
     except Exception as e:
-        print(f"\nAbbruch durch Fehler: {e}")
+        print(f"\nTerminated due to error: {e}")
 
 
 if __name__ == "__main__":
     main()
+
