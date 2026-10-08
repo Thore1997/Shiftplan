@@ -52,11 +52,11 @@ def create_timetable_lecture_period(start_date_str, end_date_str):
 
         current_day += timedelta(days=1)
 
-    df_timetable_lectrue_period = pd.DataFrame(schedule_list)
-    return df_timetable_lectrue_period
+    df_timetable_lecture_period = pd.DataFrame(schedule_list)
+    return df_timetable_lecture_period
 
 
-def create_timetabl_semester_break(start_date_str, end_date_str):
+def create_timetable_semester_break(start_date_str, end_date_str):
 
     shifts_mon_fri = [
         {"name": "Morning", "start": "09:00", "end": "11:15", "duration": 2.25},
@@ -81,6 +81,19 @@ def create_timetabl_semester_break(start_date_str, end_date_str):
         day_name = current_day.strftime("%A")
         date_str = current_day.strftime("%d.%m.%Y")
 
+        if weekday_idx <= 4:
+            for s in shifts_mon_fri:
+                shift_entry = s.copy()
+                shift_entry["date"] = date_str
+                shift_entry["weekday"] = day_name
+                shift_entry["shift_id"] = f"{date_str}_{s['name']}"
+                schedule_list.append(shift_entry)
+
+        current_day += timedelta(days=1)
+
+    df_timetable_semester_break = pd.DataFrame(schedule_list)
+    return df_timetable_semester_break
+
 
 def create_timetable_transistion(start_date_str, end_date_str):
     shifts_mon_thu = [
@@ -97,16 +110,39 @@ def create_timetable_transistion(start_date_str, end_date_str):
         {"name": "Afternoon", "start": "14:00", "end": "15:00", "duration": 1.0}
     ]
 
+    schedule_list = []
+    current_day = start_date
+
     # Convert date strings using DD.MM.YYYY
     start_date = datetime.strptime(start_date_str, "%d.%m.%Y")
     end_date = datetime.strptime(end_date_str, "%d.%m.%Y")
 
+    while current_day <= end_date:
+        if current_day in bank_holidays_ger:
+            print(f"Skipping {current_day.strftime('%d.%m.%Y')} - Reason: {bank_holidays_ger.get(current_day)}")
+            current_day += timedelta(days=1)
+            continue
+
+        weekday_idx = current_day.weekday()
+        day_name = current_day.strftime("%A")
+        date_str = current_day.strftime("%d.%m.%Y")
+
+        if weekday_idx <= 4:
+            templates = shifts_mon_thu if weekday_idx <= 3 else shifts_fri
+
+            for s in templates:
+                shift_entry = s.copy()
+                shift_entry["date"] = date_str
+                shift_entry["weekday"] = day_name
+                # Unique ID for optimization logic
+                shift_entry["shift_id"] = f"{date_str}_{s['name']}"
+                schedule_list.append(shift_entry)
+
+        current_day += timedelta(days=1)
 
 
-if __name__ == "__main__":
-    # Example call with original date format
-    df_result = Timetable("06.04.2026", "10.04.2026")
+    df_timetable_transistion = pd.DataFrame(schedule_list)
+    return df_timetable_transistion
 
-    if not df_result.empty:
-        print(df_result.head())
-        df_result.to_csv("empty_timetable.csv", index=False, sep=";", encoding="utf-8-sig")
+
+
